@@ -1,0 +1,35 @@
+# deploy.yml은 애플리케이션을 배포하기 위한 설정 파일입니다. (2023-05-05)
+# 추후 heroku_api_key를 작성해야 합니다. (지금 카드가 없어서 결제를 못하고 있는 중... ㅠㅠ)
+
+# This is a basic workflow to help you get started with Actions
+name: Deploy
+
+# Controls when the workflow will run
+on:
+  # Triggers the workflow on push or pull request events but only for the main branch
+  push:
+    branches: [ main ]
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  # This workflow contains a single job called "build"
+  build:
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - uses: actions/checkout@v3
+
+      - name: Deploy to Heroku
+        uses: AkhileshNS/heroku-deploy@v3.12.12
+        with:
+          # This will be used for authentication. You can find it in your heroku homepage account settings
+          heroku_api_key: ${{ secrets.HEROKU_DEPLOY_KEY }}
+          # Email that you use with heroku
+          heroku_email: dltn990930@naver.com
+          # The appname to use for deploying/updating
+          heroku_app_name: test-sns
