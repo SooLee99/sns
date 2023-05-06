@@ -1,6 +1,28 @@
 package com.example.sns.exception;
 
-// 해당 프로젝트 내에서 사용할 Exception 생성.
-// TODO : implement
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+
+@Getter
+@AllArgsConstructor
 public class SnsApplicationException extends RuntimeException {
+
+    private ErrorCode errorCode;
+    private String message;
+
+
+    public SnsApplicationException(ErrorCode errorCode) {
+        this.errorCode = errorCode;
+        this.message = null;
+    }
+
+
+    @Override
+    public String getMessage() {
+        if (message == null) {
+            return errorCode.getMessage();
+        }
+
+        return String.format("%s. %s", errorCode.getMessage(), message);
+    }
 }
