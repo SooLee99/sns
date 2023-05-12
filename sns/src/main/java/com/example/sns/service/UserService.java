@@ -18,7 +18,6 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-
 @Service
 @RequiredArgsConstructor
 // => 클래스 내부에 선언된 모든 final 필드나 @NonNull 필드에 대한 생성자가 자동으로 만들어지므로 코드의 양을 줄일 수 있습니다.
@@ -67,13 +66,17 @@ public class UserService {
     }
 
     public User loadUserByUserName(String userName) {
+        // userName을 입력받아 해당 사용자 엔티티를 데이터베이스에서 찾아서, User 객체로 변환하여 반환합니다.
         return userEntityRepository.findByUserName(userName).map(User::fromEntity).orElseThrow(() ->
+                // 만약 해당 사용자가 존재하지 않으면 USER_NOT_FOUND 에러를 던집니다.
                 new SnsApplicationException(ErrorCode.USER_NOT_FOUND, String.format("%s not founded", userName)));
     }
 
     public Page<Alarm> alarmList(String userName, Pageable pageable) {
+        // userName을 입력받아 해당 사용자의 알림 목록을 pageable에 맞게 조회하여 Alarm 객체로 변환한 뒤 Page<Alarm> 형태로 반환합니다.
         UserEntity userEntity = userEntityRepository.findByUserName(userName).orElseThrow(() -> new SnsApplicationException(ErrorCode.USER_NOT_FOUND, String.format("%s not founded", userName)));
-        return alarmEntityRepository.findAllByUser(userEntity, pageable).map(Alarm::fromEntity);
 
+        // 만약 해당 사용자가 존재하지 않으면 USER_NOT_FOUND 에러를 던집니다.
+        return alarmEntityRepository.findAllByUser(userEntity, pageable).map(Alarm::fromEntity);
     }
 }
