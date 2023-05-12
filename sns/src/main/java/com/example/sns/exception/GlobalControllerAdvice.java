@@ -7,21 +7,26 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-@Slf4j
-@RestControllerAdvice
+@Slf4j                  // 자동으로 로그 객체(log)를 생성해주는 역할을 합니다.
+@RestControllerAdvice   // 전역 컨트롤러 예외 처리를 담당합니다.
 public class GlobalControllerAdvice {
 
-    // 에러 코드와 에러 메시지를 반환해주는 컨트롤러
     @ExceptionHandler(SnsApplicationException.class)
+    // SnsApplicationException 예외가 발생했을 때 호출되며, ResponseEntity를 반환합니다.
     public ResponseEntity<?> applicationHandler(SnsApplicationException e) {
+
         log.error("Error occurs {}", e.toString());
+
         return ResponseEntity.status(e.getErrorCode().getStatus())
                 .body(Response.error(e.getErrorCode().name()));
     }
 
     @ExceptionHandler(RuntimeException.class)
+    // RuntimeException 예외가 발생했을 때 호출되며, ResponseEntity를 반환합니다.
     public ResponseEntity<?> applicationHandler(RuntimeException e) {
+
         log.error("Error occurs {}", e.toString());
+
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(Response.error(ErrorCode.INTERNAL_SERVER_ERROR.name()));
     }

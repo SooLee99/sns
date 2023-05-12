@@ -36,7 +36,6 @@ public class UserService {
     @Value("${jwt.token.expired-time-ms}")
     private Long expiredTimeMs;
 
-    // TODO : implement
     // 실제 회원가입이 실행되는 메소드
     public User join(String userName, String password) {
         // 회원 가입을 진행할 때 userName의 중복을 체크하고,
@@ -53,7 +52,6 @@ public class UserService {
     // 실제 로그인이 실행되는 메소드
     // Spring Security를 이용해 JWT(JSON Web Token)를 사용.
     // => 로그인 시, 아이디 토큰[암호화된 문자열]을 발행해서 인증함.
-    // TODO : implement
     public String login(String userName, String password) {
         // (1) 회원가입 여부 체크.
         // => userEntityRepository에서 검색한 userName이 비어있는 경우, 해당 에러를 반환한다.
@@ -73,7 +71,6 @@ public class UserService {
                 new SnsApplicationException(ErrorCode.USER_NOT_FOUND, String.format("%s not founded", userName)));
     }
 
-    // TODO : alarm return
     public Page<Alarm> alarmList(String userName, Pageable pageable) {
         UserEntity userEntity = userEntityRepository.findByUserName(userName).orElseThrow(() -> new SnsApplicationException(ErrorCode.USER_NOT_FOUND, String.format("%s not founded", userName)));
         return alarmEntityRepository.findAllByUser(userEntity, pageable).map(Alarm::fromEntity);
