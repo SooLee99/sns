@@ -3,6 +3,7 @@ package com.example.sns.model;
 // model 패키지 : Model-View-Controller (MVC) 디자인 패턴에서 모델(Model) 역할을 하는 클래스들을 모아둔 패키지입니다.
 
 import com.example.sns.model.entity.UserEntity;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -16,7 +17,7 @@ import java.sql.Timestamp;
 import java.util.Collection;
 import java.util.List;
 
-// User 객체를 반환하는 클래스(DTO) => 서비스 부분에서 사용할 때 사용.
+
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
@@ -24,12 +25,12 @@ import java.util.List;
 public class User implements UserDetails {
 
     private Integer id;
-    private String userName;
+    private String username;
     private String password;
-    private UserRole userRole;
+    private UserRole role;
     private Timestamp registeredAt;
     private Timestamp updatedAt;
-    private Timestamp deletedAt;
+    private Timestamp removedAt;
 
 
     public static User fromEntity(UserEntity entity) {
@@ -45,32 +46,32 @@ public class User implements UserDetails {
     }
 
     @Override
+    @JsonIgnore
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return List.of(new SimpleGrantedAuthority(this.getUserRole().toString()));
+        return List.of(new SimpleGrantedAuthority(role.toString()));
     }
 
     @Override
-    public String getUsername() {
-        return this.userName;
-    }
-
-    @Override
+    @JsonIgnore
     public boolean isAccountNonExpired() {
-        return this.deletedAt == null;
+        return removedAt == null;
     }
 
     @Override
+    @JsonIgnore
     public boolean isAccountNonLocked() {
-        return this.deletedAt == null;
+        return removedAt == null;
     }
 
     @Override
+    @JsonIgnore
     public boolean isCredentialsNonExpired() {
-        return this.deletedAt == null;
+        return removedAt == null;
     }
 
     @Override
+    @JsonIgnore
     public boolean isEnabled() {
-        return this.deletedAt == null;
+        return removedAt == null;
     }
 }

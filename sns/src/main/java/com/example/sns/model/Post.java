@@ -5,11 +5,13 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 import java.sql.Timestamp;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Getter
 @AllArgsConstructor
 public class Post {
-    private Integer id;
+    private Integer id = null;
 
     private String title;
 
@@ -21,7 +23,7 @@ public class Post {
 
     private Timestamp updatedAt;
 
-    private Timestamp deletedAt;
+    private Timestamp removedAt;
 
     public static Post fromEntity(PostEntity entity) {
         return new Post(
@@ -31,7 +33,7 @@ public class Post {
                 User.fromEntity(entity.getUser()),
                 entity.getRegisteredAt(),
                 entity.getUpdatedAt(),
-                entity.getDeletedAt()
+                entity.getRemovedAt()
         );
     }
 }

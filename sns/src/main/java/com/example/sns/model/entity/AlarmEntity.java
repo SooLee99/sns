@@ -3,6 +3,7 @@ import com.example.sns.model.AlarmArgs;
 import com.example.sns.model.AlarmType;
 import com.vladmihalcea.hibernate.type.json.JsonBinaryType;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.Type;
@@ -13,55 +14,42 @@ import javax.persistence.*;
 import java.sql.Timestamp;
 import java.time.Instant;
 
-@Entity     // JPA Entity임을 나타내는 어노테이션입니다.
-
-// @Table: 알람 정보를 저장할 데이터베이스 테이블의 이름과 인덱스를 지정하는 어노테이션입니다.
+@Setter
+@Getter
+@Entity
 @Table(name = "\"alarm\"", indexes = {
         @Index(name = "user_id_idx", columnList = "user_id")
 })
-@Getter
-@Setter
-
-// @TypeDef: Hibernate에서 사용할 UserType을 등록하는 어노테이션입니다.
-// 이 클래스에서는 jsonb라는 이름으로 JsonBinaryType 클래스를 등록합니다.
-// JsonBinaryType은 JSON 형태의 데이터를 바이너리 형태로 저장하기 위한 Hibernate Type입니다.
 @TypeDef(name = "jsonb", typeClass = JsonBinaryType.class)
-
-// @SQLDelete: 논리 삭제를 구현하기 위한 Hibernate 어노테이션입니다. deleted_at 필드에 현재 시간을 저장합니다.
-@SQLDelete(sql = "UPDATE \"alarm\" SET deleted_at = NOW() where id=?")
-
-// @Where: 논리 삭제를 구현하기 위한 Hibernate 어노테이션입니다. deleted_at 필드가 NULL인 경우만 조회합니다.
-@Where(clause = "deleted_at is NULL")
+@SQLDelete(sql = "UPDATE \"alarm\" SET removed_at = NOW() WHERE id=?")
+@Where(clause = "removed_at is NULL")
+@NoArgsConstructor
 public class AlarmEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer id;
+    private Integer id = null;
 
-    @ManyToOne  // @ManyToOne, @JoinColumn: 다대일(N:1) 관계를 매핑하는 어노테이션입니다. 
-    @JoinColumn(name = "user_id")       // user_id 필드를 FK로 지정합니다.
-    // 알람을 받은 사람을 나타내는 필드
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id")
     private UserEntity user;
 
-    @Enumerated(EnumType.STRING)        // Enum 타입 필드의 매핑을 지정하는 어노테이션입니다.
+    @Enumerated(EnumType.STRING)
     private AlarmType alarmType;
 
-    @Type(type = "jsonb")               // 이 필드가 Postgres JSONB 타입과 매핑되는 것을 명시합니다.
-    @Column(columnDefinition = "json")  // 이 필드의 데이터베이스 컬럼이 JSON 타입인 것을 명시합니다.
-    // 알람에 대한 추가적인 인자값을 담는 필드
+    @Type(type = "jsonb")
+    @Column(columnDefinition = "json")
     private AlarmArgs args;
 
     @Column(name = "registered_at")
-    // 해당 알람이 등록된 시간을 나타내는 필드
     private Timestamp registeredAt;
 
     @Column(name = "updated_at")
-    // 해당 알람이 업데이트된 시간을 나타내는 필드
     private Timestamp updatedAt;
 
-    @Column(name = "deleted_at")
-    // 해당 알람이 삭제된 시간을 나타내는 필드
-    private Timestamp deletedAt;
+    @Column(name = "removed_at")
+    private Timestamp removedAt;
+
 
     @PrePersist
     void registeredAt() {
@@ -73,11 +61,11 @@ public class AlarmEntity {
         this.updatedAt = Timestamp.from(Instant.now());
     }
 
-    public static AlarmEntity of(UserEntity userEntity, AlarmType alarmType, AlarmArgs args) {
+    public static AlarmEntity of(AlarmType alarmType, AlarmArgs args, UserEntity user) {
         AlarmEntity entity = new AlarmEntity();
-        entity.setUser(userEntity);
         entity.setAlarmType(alarmType);
         entity.setArgs(args);
+        entity.setUser(user);
         return entity;
     }
 }

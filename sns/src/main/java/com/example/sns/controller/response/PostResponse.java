@@ -5,23 +5,19 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 import java.sql.Timestamp;
+import java.util.List;
+import java.util.stream.Collectors;
 
-@AllArgsConstructor
 @Getter
-public class PostResponse {
+@AllArgsConstructor
+public
+class PostResponse {
     private Integer id;
-
     private String title;
-
     private String body;
-
     private UserResponse user;
-
     private Timestamp registeredAt;
-
     private Timestamp updatedAt;
-
-    private Timestamp deletedAt;
 
     public static PostResponse fromPost(Post post) {
         return new PostResponse(
@@ -30,10 +26,8 @@ public class PostResponse {
                 post.getBody(),
                 UserResponse.fromUser(post.getUser()),
                 post.getRegisteredAt(),
-                post.getUpdatedAt(),
-                post.getDeletedAt()
+                post.getUpdatedAt()
         );
     }
-
 
 }

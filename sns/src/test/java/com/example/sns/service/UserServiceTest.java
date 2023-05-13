@@ -1,7 +1,9 @@
 package com.example.sns.service;
 
 import com.example.sns.exception.ErrorCode;
+import com.example.sns.exception.SimpleSnsApplicationException;
 import com.example.sns.exception.SnsApplicationException;
+import com.example.sns.fixture.TestInfoFixture;
 import com.example.sns.fixture.UserEntityFixture;
 import com.example.sns.model.entity.UserEntity;
 import com.example.sns.repository.UserEntityRepository;
@@ -21,94 +23,72 @@ import static org.mockito.Mockito.when;
 public class UserServiceTest {
 
     @Autowired
-    private UserService userService;
+    UserService userService;
 
     @MockBean
-    private UserEntityRepository userEntityRepository;
+    UserEntityRepository userEntityRepository;
 
     @MockBean
-    private BCryptPasswordEncoder encoder;
+    BCryptPasswordEncoder bCryptPasswordEncoder;
 
     @Test
-    void 회원가입이_정상적으로_동작하는_경우(){
-        String userName = "userName";
-        String password = "password";
+    void 로그인이_정상동작한다() {
+        TestInfoFixture.TestInfo fixture = TestInfoFixture.get();
 
-        // 회원가입이 정상적으로 동작하는 경우
-        // (1) UserEntityRepository 인터페이스에서 findByUserName() 메소드를 실행 시, 현재 입력된 userName 값이 없어야 합니다.
-        when(userEntityRepository.findByUserName(userName)).thenReturn(Optional.empty());
+        when(userEntityRepository.findByUserName(fixture.getUserName())).thenReturn(Optional.empty());
 
-        when(encoder.encode(password)).thenReturn("encrypt_password");
+        Assertions.assertDoesNotThrow(() -> userService.login(fixture.getUserName(), fixture.getPassword()));
 
-        // (2) UserEntityRepository 인터페이스의 save() 메서드가 호출이 될 때,
-        //     UserEntity 클래스의 mock 객체를 생성하여 Optional로 감싼 결과를 반환합니다.
-        when(userEntityRepository.save(any())).thenReturn(UserEntityFixture.get(userName, password, 1));
-
-        Assertions.assertDoesNotThrow(() -> userService.join(userName, password));
     }
 
     @Test
-    void 회원가입시_userName으로_회원가입한_유저가_이미_있는경우(){
-        String userName = "userName";
-        String password = "password";
-        UserEntity fixture = UserEntityFixture.get(userName, password, 1);
+    void 로그인시_유저가_존재하지_않으면_에러를_내뱉는다() {
+        TestInfoFixture.TestInfo fixture = TestInfoFixture.get();
 
-        // 회원가입 시, userName으로 이미 가입된 사용자가 있는 경우에 대한 테스트입니다.
-        // (1) UserEntityRepository 인터페이스에서 findByUserName() 메서드를 호출할 때,
-        // 이미 userName 값으로 가입된 사용자가 존재하는 것으로 설정하고, 값이 반환됩니다.
-        when(userEntityRepository.findByUserName(userName)).thenReturn(Optional.of(fixture));
+        when(userEntityRepository.findByUserName(fixture.getUserName())).thenReturn(Optional.empty());
+        SimpleSnsApplicationException exception = Assertions.assertThrows(SimpleSnsApplicationException.class
+                , () -> userService.login(fixture.getUserName(), fixture.getPassword()));
 
-        when(encoder.encode(password)).thenReturn("encrypt_password");
+        Assertions.assertEquals(ErrorCode.USER_NOT_FOUND, exception.getErrorCode());
+    }
 
-        // (2) UserEntityRepository 인터페이스에서 save() 메서드를 호출할 때, 영향을 주지 않습니다.
-        //      save() 메서드가 호출되어도 Optional.of(mock(UserEntity.class))로 설정된 값이 반환됩니다.
-        when(userEntityRepository.save(any())).thenReturn(Optional.of(fixture));
 
-        // (3) join() 메서드를 호출할 때, userName 값이 이미 존재하는 경우
-        //     SnsApplicationException 예외가 발생하도록 합니다.
-        SnsApplicationException e = Assertions.assertThrows(SnsApplicationException.class, () -> userService.join(userName, password));
-        Assertions.assertEquals(ErrorCode.DUPLICATED_USER_NAME, e.getErrorCode());
+    @Test
+    void 로그인시_패스워드가_다르면_에러를_내뱉는다() {
+        TestInfoFixture.TestInfo fixture = TestInfoFixture.get();
+
+        when(userEntityRepository.findByUserName(fixture.getUserName())).thenReturn(Optional.of(UserEntityFixture.get(fixture.getUserName(), "password1")));
+        when(bCryptPasswordEncoder.matches(fixture.getPassword(), "password1")).thenReturn(false);
+
+        SimpleSnsApplicationException exception = Assertions.assertThrows(SimpleSnsApplicationException.class
+                , () -> userService.login(fixture.getUserName(), fixture.getPassword()));
+
+        Assertions.assertEquals(ErrorCode.INVALID_PASSWORD, exception.getErrorCode());
     }
 
     @Test
-    void 로그인이_정상적으로_동작하는_경우(){
-        String userName = "userName";
-        String password = "password";
+    void 회원가입이_정상동작한다() {
+        TestInfoFixture.TestInfo fixture = TestInfoFixture.get();
 
-        UserEntity fixture = UserEntityFixture.get(userName, password, 1);
+        when(userEntityRepository.findByUserName(fixture.getUserName())).thenReturn(Optional.of(UserEntityFixture.get(fixture.getUserName(), fixture.getPassword())));
+        when(bCryptPasswordEncoder.encode(fixture.getPassword())).thenReturn("password_encrypt");
+        when(userEntityRepository.save(any())).thenReturn(Optional.of(UserEntityFixture.get(fixture.getUserName(), "password_encrypt")));
 
-        // mocking
-        when(userEntityRepository.findByUserName(userName)).thenReturn(Optional.of(fixture));
-        when(encoder.matches(password, fixture.getPassword())).thenReturn(true);
-
-        Assertions.assertDoesNotThrow(() -> userService.login(userName, password));
+        Assertions.assertDoesNotThrow(() -> userService.join(fixture.getUserName(), fixture.getPassword()));
     }
+
 
     @Test
-    void 로그인시_userName으로_회원가입한_유저가_없는_경우(){
-        String userName = "userName";
-        String password = "password";
+    void 회원가입시_아이디가_중복되면_다르면_에러를_내뱉는다() {
+        TestInfoFixture.TestInfo fixture = TestInfoFixture.get();
 
-        // 로그인 시, userName으로 가입된 사용자가 아닌 경우를 테스트합니다.
-        when(userEntityRepository.findByUserName(userName)).thenReturn(Optional.empty());
+        when(userEntityRepository.findByUserName(fixture.getUserName()))
+                .thenReturn(Optional.of(UserEntityFixture.get(fixture.getUserName(), fixture.getPassword())));
 
-        // SnsApplicationException 예외가 발생하도록 합니다.
-        SnsApplicationException e = Assertions.assertThrows(SnsApplicationException.class, () -> userService.login(userName, password));
-        Assertions.assertEquals(ErrorCode.USER_NOT_FOUND, e.getErrorCode());
+        SimpleSnsApplicationException exception = Assertions.assertThrows(SimpleSnsApplicationException.class,
+                () -> userService.join(fixture.getUserName(), fixture.getPassword()));
+
+        Assertions.assertEquals(ErrorCode.DUPLICATED_USER_NAME, exception.getErrorCode());
     }
-    @Test
-    void 로그인시_패스워드가_틀린_경우(){
-        String userName = "userName";
-        String password = "password";
-        String wrongPassword = "wrongPassword";
 
-        UserEntity fixture = UserEntityFixture.get(userName, password, 1);
-
-        // 로그인 시, userName으로 가입된 사용자가 아닌 경우를 테스트합니다.
-        when(userEntityRepository.findByUserName(userName)).thenReturn(Optional.of(fixture));
-
-        // SnsApplicationException 예외가 발생하도록 합니다.
-        SnsApplicationException e = Assertions.assertThrows(SnsApplicationException.class, () -> userService.login(userName, wrongPassword));
-        Assertions.assertEquals(ErrorCode.INVALID_PASSWORD, e.getErrorCode());
-    }
 }

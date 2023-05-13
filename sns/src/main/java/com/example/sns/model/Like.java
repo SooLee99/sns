@@ -1,6 +1,6 @@
 package com.example.sns.model;
 
-import com.example.sns.model.entity.CommentEntity;
+import com.example.sns.model.entity.LikeEntity;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
@@ -8,9 +8,8 @@ import java.sql.Timestamp;
 
 @Getter
 @AllArgsConstructor
-public class Comment {
+public class Like {
     private Integer id;
-    private String comment;
     private Integer userId;
     private String userName;
     private Integer postId;
@@ -18,10 +17,9 @@ public class Comment {
     private Timestamp updatedAt;
     private Timestamp removedAt;
 
-    public static Comment fromEntity(CommentEntity entity) {
-        return new Comment(
+    public static Like fromEntity(LikeEntity entity) {
+        return new Like(
                 entity.getId(),
-                entity.getComment(),
                 entity.getUser().getId(),
                 entity.getUser().getUserName(),
                 entity.getPost().getId(),

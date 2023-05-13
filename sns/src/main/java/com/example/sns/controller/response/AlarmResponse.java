@@ -4,31 +4,26 @@ import com.example.sns.model.Alarm;
 import com.example.sns.model.AlarmArgs;
 import com.example.sns.model.AlarmType;
 import lombok.AllArgsConstructor;
-import lombok.Data;
+import lombok.Getter;
 
 import java.sql.Timestamp;
 
-@Data
+@Getter
 @AllArgsConstructor
 public class AlarmResponse {
     private Integer id;
-    private AlarmType alarmType;
-    private AlarmArgs alarmArgs;
     private String text;
     private Timestamp registeredAt;
     private Timestamp updatedAt;
-    private Timestamp deletedAt;
-
+    private Timestamp removedAt;
 
     public static AlarmResponse fromAlarm(Alarm alarm) {
         return new AlarmResponse(
                 alarm.getId(),
-                alarm.getAlarmType(),
-                alarm.getArgs(),
-                alarm.getAlarmType().getAlarmText(),
+                alarm.getAlarmText(),
                 alarm.getRegisteredAt(),
                 alarm.getUpdatedAt(),
-                alarm.getDeletedAt()
+                alarm.getRemovedAt()
         );
     }
 }

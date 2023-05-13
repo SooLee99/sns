@@ -1,6 +1,7 @@
 package com.example.sns.model.entity;
 
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.Where;
@@ -9,17 +10,18 @@ import javax.persistence.*;
 import java.sql.Timestamp;
 import java.time.Instant;
 
+@Setter
+@Getter
 @Entity
 @Table(name = "\"like\"")
-@Getter
-@Setter
-@SQLDelete(sql = "UPDATE \"like\" SET deleted_at = NOW() where id=?")
-@Where(clause = "deleted_at is NULL")
+@SQLDelete(sql = "UPDATE \"like\" SET removed_at = NOW() WHERE id=?")
+@Where(clause = "removed_at is NULL")
+@NoArgsConstructor
 public class LikeEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer id;
+    private Integer id = null;
 
     @ManyToOne
     @JoinColumn(name = "user_id")
@@ -35,8 +37,9 @@ public class LikeEntity {
     @Column(name = "updated_at")
     private Timestamp updatedAt;
 
-    @Column(name = "deleted_at")
-    private Timestamp deletedAt;
+    @Column(name = "removed_at")
+    private Timestamp removedAt;
+
 
     @PrePersist
     void registeredAt() {
@@ -48,10 +51,10 @@ public class LikeEntity {
         this.updatedAt = Timestamp.from(Instant.now());
     }
 
-    public static LikeEntity of(UserEntity userEntity, PostEntity postEntity) {
+    public static LikeEntity of(PostEntity post, UserEntity user) {
         LikeEntity entity = new LikeEntity();
-        entity.setUser(userEntity);
-        entity.setPost(postEntity);
+        entity.setPost(post);
+        entity.setUser(user);
         return entity;
     }
 }
